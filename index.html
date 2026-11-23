@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2fb36d">
+<title>Minhoca Faminta</title>
+<link rel="icon" href="https://cdn.jsdelivr.net/npm/@lobehub/fluent-emoji-3d@1.1.0/assets/1f41b.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    --green: #2fb36d; --green-d: #1a8a4f; --pink: #ff5f8f; --ink: #1c2a22; --muted: #6b7b72; --card: #fff;
+    --shadow: 0 1px 2px rgba(20, 40, 28, .06), 0 10px 26px rgba(20, 40, 28, .1);
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; color: var(--ink); font: 15px/1.45 "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
+    background:
+      radial-gradient(520px 520px at 6% 8%, #fde2ec 0 45%, transparent 46%),
+      radial-gradient(600px 600px at 100% 100%, #d9f4e4 0 40%, transparent 41%),
+      #f1f7f3;
+    background-attachment: fixed; min-height: 100vh;
+  }
+  button { font: inherit; color: inherit; }
+  .app { max-width: 460px; margin: 0 auto; padding: 18px 16px calc(24px + env(safe-area-inset-bottom)); }
+  @media (min-width: 520px) { .app { padding-top: 32px; } }
+  .ic { display: inline-block; vertical-align: middle; object-fit: contain; }
+  .ic-txt { display: inline-grid; place-items: center; vertical-align: middle; line-height: 1; }
+
+  header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+  .marca { display: flex; align-items: center; gap: 10px; }
+  .marca-ic { display: grid; place-items: center; width: 50px; height: 50px; border-radius: 16px;
+              background: linear-gradient(145deg, #ff8fb1, var(--pink)); box-shadow: 0 10px 18px -10px var(--pink); }
+  h1 { margin: 0; font-size: 1.3rem; font-weight: 800; line-height: 1.05; letter-spacing: -.02em; }
+  h1 span { display: block; color: var(--pink); }
+  .placar { display: flex; gap: 8px; }
+  .pill { min-width: 64px; padding: 6px 12px; border-radius: 16px; background: var(--card); box-shadow: var(--shadow); text-align: center; line-height: 1.15; }
+  .pill small { display: block; color: var(--muted); font-size: .68rem; font-weight: 600; }
+  .pill b { font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+  .pill.recorde b { color: #d98a00; }
+
+  .tabuleiro { position: relative; aspect-ratio: 1; border-radius: 26px; padding: 10px; background: linear-gradient(145deg, #5ccf8a, var(--green-d));
+               box-shadow: 0 20px 40px -22px var(--green-d); touch-action: none; user-select: none; }
+  canvas { display: block; width: 100%; height: 100%; border-radius: 18px; }
+  .tela { position: absolute; inset: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+          border-radius: 18px; background: rgba(20, 50, 32, .55); backdrop-filter: blur(3px); color: #fff; text-align: center; padding: 20px; }
+  .tela[hidden] { display: none; }
+  .tela h2 { margin: 4px 0 0; font-size: 1.6rem; font-weight: 800; letter-spacing: -.02em; }
+  .tela p { margin: 0 0 10px; opacity: .92; }
+  .tela .novo { display: inline-block; padding: 3px 12px; border-radius: 99px; background: #ffd34d; color: #5a3d00; font-weight: 700; font-size: .85rem; }
+  .btn { padding: 13px 28px; border: 0; border-radius: 16px; background: #fff; color: var(--green-d); font-weight: 800; font-size: 1.05rem; cursor: pointer;
+         box-shadow: 0 10px 20px -10px rgba(0, 0, 0, .4); transition: transform .15s; }
+  .btn:hover { transform: translateY(-2px); }
+
+  .controles { display: grid; grid-template-columns: repeat(3, 64px); grid-template-rows: repeat(2, 56px); gap: 8px; justify-content: center; margin: 18px 0 6px; }
+  .seta { border: 0; border-radius: 18px; background: var(--card); box-shadow: var(--shadow); font-size: 1.4rem; color: var(--green-d); cursor: pointer;
+          touch-action: manipulation; transition: transform .08s, background .15s; }
+  .seta:active { transform: scale(.92); background: #e9f7ef; }
+  .seta.cima { grid-column: 2; }
+  .seta.esq { grid-column: 1; grid-row: 2; }
+  .seta.baixo { grid-column: 2; grid-row: 2; }
+  .seta.dir { grid-column: 3; grid-row: 2; }
+  .seta.pausa { grid-column: 3; grid-row: 1; font-size: 1rem; color: var(--muted); }
+  .dica { margin: 8px 0 0; color: var(--muted); font-size: .8rem; text-align: center; }
+  .frutas { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px 14px; margin-top: 14px; color: var(--muted); font-size: .78rem; }
+  .frutas span { display: inline-flex; align-items: center; gap: 4px; }
+  footer { margin-top: 22px; text-align: center; font-size: .8rem; color: var(--muted); }
+  footer a { color: var(--green-d); font-weight: 600; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="marca">
+      <span class="marca-ic"><i data-e="🐛" data-s="32"></i></span>
+      <h1>Minhoca <span>Faminta</span></h1>
+    </div>
+    <div class="placar">
+      <div class="pill"><small>Pontos</small><b id="pontos">0</b></div>
+      <div class="pill recorde"><small>Recorde</small><b id="recorde">0</b></div>
+    </div>
+  </header>
+
+  <div class="tabuleiro" id="tabuleiro">
+    <canvas id="tela" aria-label="Tabuleiro do jogo"></canvas>
+    <div class="tela" id="sobreposicao">
+      <i data-e="🐛" data-s="72"></i>
+      <h2 id="tela-titulo">Minhoca Faminta</h2>
+      <p id="tela-texto">Coma as frutas, cresça e não bata na parede nem em você mesma!</p>
+      <button class="btn" id="btn-jogar" type="button">Jogar</button>
+    </div>
+  </div>
+
+  <div class="controles" aria-label="Controles">
+    <button class="seta cima" data-d="0,-1" aria-label="Para cima">▲</button>
+    <button class="seta pausa" id="btn-pausa" aria-label="Pausar">❚❚</button>
+    <button class="seta esq" data-d="-1,0" aria-label="Para a esquerda">◀</button>
+    <button class="seta baixo" data-d="0,1" aria-label="Para baixo">▼</button>
+    <button class="seta dir" data-d="1,0" aria-label="Para a direita">▶</button>
+  </div>
+  <p class="dica">No computador: setas ou W A S D · Espaço pausa. No celular: deslize o dedo no tabuleiro.</p>
+  <div class="frutas" id="legenda"></div>
+
+  <footer>Feito por <a href="https://github.com/rico2978bg-hub">Ricardo</a> · <a href="https://github.com/rico2978bg-hub/minhoca-faminta">código no GitHub</a></footer>
+</div>
+
+<script>
+// Ícones 3D (Fluent Emoji da Microsoft, licença MIT). Sem internet, cai no emoji comum.
+const CDN = "https://cdn.jsdelivr.net/npm/@lobehub/fluent-emoji-3d@1.1.0/assets/";
+const el = (tag, props = {}, ...filhos) => { const e = Object.assign(document.createElement(tag), props); e.append(...filhos); return e; };
+const urlIcone = emoji => CDN + [...emoji].map(c => c.codePointAt(0).toString(16)).filter(h => h !== "fe0f").join("-") + ".webp";
+function icone(emoji, tam = 32) {
+  const img = el("img", { className: "ic", alt: "", width: tam, height: tam, src: urlIcone(emoji) });
+  img.onerror = () => img.replaceWith(el("span", { className: "ic-txt", textContent: emoji, style: `font-size:${tam * .8}px;width:${tam}px;height:${tam}px` }));
+  return img;
+}
+document.querySelectorAll("i[data-e]").forEach(i => i.replaceWith(icone(i.dataset.e, +i.dataset.s)));
+
+/* ---------- Regras do jogo ---------- */
+const COLS = 17, LINHAS = 17;
+const FRUTAS = [{ e: "🍎", v: 1 }, { e: "🍌", v: 1 }, { e: "🍇", v: 1 }, { e: "🍊", v: 1 }, { e: "🍓", v: 1 }];
+const ESPECIAL = { e: "🍉", v: 5, dura: 7000 }; // a cada 5 frutas aparece uma melancia que vale 5 e some em 7 s
+let jogo;
+
+function novoJogo(rand = Math.random) {
+  const x = Math.floor(COLS / 2), y = Math.floor(LINHAS / 2);
+  jogo = { cobra: [{ x, y }, { x: x - 1, y }, { x: x - 2, y }], dir: { x: 1, y: 0 }, fila: [], pontos: 0, comidas: 0, estado: "pronto", rand, comida: null };
+  jogo.comida = novaComida(false);
+  return jogo;
+}
+
+function novaComida(podeEspecial = true, agora = performance.now()) {
+  const livres = [];
+  for (let y = 0; y < LINHAS; y++) for (let x = 0; x < COLS; x++) {
+    if (!jogo.cobra.some(s => s.x === x && s.y === y)) livres.push({ x, y });
+  }
+  if (!livres.length) return null;
+  const lugar = livres[Math.floor(jogo.rand() * livres.length)];
+  const especial = podeEspecial && jogo.comidas > 0 && jogo.comidas % 5 === 0;
+  const f = especial ? ESPECIAL : FRUTAS[Math.floor(jogo.rand() * FRUTAS.length)];
+  return { ...lugar, e: f.e, v: f.v, some: especial ? agora + ESPECIAL.dura : 0 };
+}
+
+// Guarda até 2 viradas, para curvas rápidas não se perderem; nunca deixa dar meia-volta.
+function virar(dx, dy) {
+  const ultima = jogo.fila.at(-1) || jogo.dir;
+  if ((ultima.x === -dx && ultima.y === -dy) || (ultima.x === dx && ultima.y === dy)) return false;
+  if (jogo.fila.length < 2) jogo.fila.push({ x: dx, y: dy });
+  return true;
+}
+
+function passo(agora = performance.now()) {
+  if (jogo.fila.length) jogo.dir = jogo.fila.shift();
+  const cab = jogo.cobra[0];
+  const nova = { x: cab.x + jogo.dir.x, y: cab.y + jogo.dir.y };
+  const come = jogo.comida && nova.x === jogo.comida.x && nova.y === jogo.comida.y;
+  const corpo = come ? jogo.cobra : jogo.cobra.slice(0, -1); // o rabo sai do lugar neste passo, a não ser que cresça
+  if (nova.x < 0 || nova.y < 0 || nova.x >= COLS || nova.y >= LINHAS || corpo.some(s => s.x === nova.x && s.y === nova.y)) {
+    jogo.estado = "fim";
+    return "bateu";
+  }
+  jogo.cobra.unshift(nova);
+  if (come) {
+    const valor = jogo.comida.v;
+    jogo.pontos += valor;
+    jogo.comidas++;
+    jogo.comida = novaComida(true, agora);
+    if (!jogo.comida) jogo.estado = "venceu";
+    return valor;
+  }
+  jogo.cobra.pop();
+  if (jogo.comida?.some && agora > jogo.comida.some) jogo.comida = novaComida(false, agora);
+  return "andou";
+}
+const intervalo = () => Math.max(65, 150 - jogo.comidas * 4); // fica mais rápida a cada fruta
+
+/* ---------- Recorde ---------- */
+const CHAVE = "minhoca_recorde";
+let recorde = 0;
+try { recorde = Math.max(0, parseInt(localStorage.getItem(CHAVE), 10) || 0); } catch {}
+function salvarRecorde() { try { localStorage.setItem(CHAVE, String(recorde)); } catch {} }
+
+/* ---------- Desenho ---------- */
+const canvas = document.getElementById("tela");
+const ctx = canvas.getContext("2d");
+const imagens = {};
+for (const f of [...FRUTAS, ESPECIAL]) { const img = new Image(); img.src = urlIcone(f.e); imagens[f.e] = img; }
+let celula = 20;
+let flutuantes = []; // "+1" que sobe quando come
+
+function ajustar() {
+  const r = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = Math.round(r.width * dpr);
+  canvas.height = Math.round(r.height * dpr);
+  celula = canvas.width / COLS;
+}
+new ResizeObserver(ajustar).observe(canvas);
+
+function desenhar(t) {
+  const c = celula;
+  for (let y = 0; y < LINHAS; y++) for (let x = 0; x < COLS; x++) {
+    ctx.fillStyle = (x + y) % 2 ? "#a9e28c" : "#b8ea9b";
+    ctx.fillRect(x * c, y * c, c + 1, c + 1);
+  }
+  // Fruta
+  const f = jogo.comida;
+  if (f) {
+    const pulo = 1 + Math.sin(t / 180) * .07;
+    const tam = c * 1.4 * pulo, cx = f.x * c + c / 2, cy = f.y * c + c / 2;
+    if (f.some) { // anel do tempo restante da melancia
+      const resta = Math.max(0, (f.some - t) / ESPECIAL.dura);
+      ctx.beginPath(); ctx.arc(cx, cy, c * .62, -Math.PI / 2, -Math.PI / 2 + resta * Math.PI * 2);
+      ctx.strokeStyle = "#ff5f8f"; ctx.lineWidth = c * .1; ctx.lineCap = "round"; ctx.stroke();
+    }
+    const img = imagens[f.e];
+    if (img.complete && img.naturalWidth) ctx.drawImage(img, cx - tam / 2, cy - tam / 2, tam, tam);
+    else { ctx.font = `${c * .8}px sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(f.e, cx, cy); }
+  }
+  // Minhoca: corpo listrado, do rosa forte na cabeça ao pêssego no rabo
+  const s = jogo.cobra, n = s.length;
+  const centro = p => [p.x * c + c / 2, p.y * c + c / 2];
+  ctx.lineCap = ctx.lineJoin = "round";
+  ctx.beginPath(); s.forEach((p, i) => ctx[i ? "lineTo" : "moveTo"](...centro(p)));
+  ctx.save(); ctx.translate(0, c * .1); // sombra embaixo do corpo
+  ctx.strokeStyle = "rgba(40, 90, 30, .22)"; ctx.lineWidth = c * .84; ctx.stroke();
+  ctx.restore();
+  ctx.strokeStyle = "#ff86aa"; ctx.lineWidth = c * .8; ctx.stroke(); // corpo contínuo
+  for (let i = n - 1; i > 0; i--) { // listras de minhoca
+    const [x, y] = centro(s[i]);
+    const k = i / Math.max(1, n - 1);
+    ctx.beginPath(); ctx.arc(x, y, c * (.36 - k * .06), 0, Math.PI * 2);
+    ctx.fillStyle = `hsl(${342 + k * 25}, 95%, ${i % 2 ? 76 : 68}%)`;
+    ctx.fill();
+  }
+  // Cabeça e olhos
+  const [hx, hy] = centro(s[0]);
+  ctx.beginPath(); ctx.arc(hx, hy, c * .5, 0, Math.PI * 2); ctx.fillStyle = "#ff5f8f"; ctx.fill();
+  const d = jogo.dir, px = -d.y, py = d.x;
+  for (const lado of [-1, 1]) {
+    const ex = hx + d.x * c * .14 + px * lado * c * .2, ey = hy + d.y * c * .14 + py * lado * c * .2;
+    ctx.beginPath(); ctx.arc(ex, ey, c * .15, 0, Math.PI * 2); ctx.fillStyle = "#fff"; ctx.fill();
+    ctx.beginPath(); ctx.arc(ex + d.x * c * .05, ey + d.y * c * .05, c * .075, 0, Math.PI * 2); ctx.fillStyle = "#1c2a22"; ctx.fill();
+  }
+  if (jogo.estado === "fim") { ctx.font = `${c * .9}px sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("😵", hx, hy); }
+  // "+1" subindo
+  flutuantes = flutuantes.filter(p => t - p.t < 700);
+  for (const p of flutuantes) {
+    const k = (t - p.t) / 700;
+    ctx.globalAlpha = 1 - k;
+    ctx.font = `800 ${c * .75}px Poppins, sans-serif`; ctx.textAlign = "center"; ctx.fillStyle = "#fff";
+    ctx.strokeStyle = "#d63a6c"; ctx.lineWidth = c * .12; ctx.strokeText(p.txt, p.x, p.y - k * c * 1.5); ctx.fillText(p.txt, p.x, p.y - k * c * 1.5);
+    ctx.globalAlpha = 1;
+  }
+}
+
+/* ---------- Partida ---------- */
+const sobreposicao = document.getElementById("sobreposicao");
+const $ = id => document.getElementById(id);
+let ultimo = 0, acumulado = 0;
+
+function placar() { $("pontos").textContent = jogo.pontos; $("recorde").textContent = recorde; }
+
+function mostrarTela(titulo, texto, botao, extra) {
+  $("tela-titulo").textContent = titulo;
+  $("tela-texto").replaceChildren(texto, ...(extra ? [el("br"), extra] : []));
+  $("btn-jogar").textContent = botao;
+  sobreposicao.hidden = false;
+}
+
+function comecar() {
+  if (jogo.estado === "fim" || jogo.estado === "venceu") novoJogo();
+  jogo.estado = "jogando";
+  sobreposicao.hidden = true;
+  acumulado = 0;
+  placar();
+}
+
+function pausar() {
+  if (jogo.estado !== "jogando") return;
+  jogo.estado = "pausado";
+  mostrarTela("Pausado", "Respire fundo… a minhoca espera.", "Continuar");
+}
+
+function terminar(venceu) {
+  const bateuRecorde = jogo.pontos > recorde;
+  if (bateuRecorde) { recorde = jogo.pontos; salvarRecorde(); }
+  placar();
+  navigator.vibrate?.(venceu ? [40, 40, 40] : 120);
+  mostrarTela(venceu ? "Você zerou! 🎉" : "Fim de jogo", `Você fez ${jogo.pontos} ponto${jogo.pontos === 1 ? "" : "s"}.`, "Jogar de novo",
+    bateuRecorde && jogo.pontos ? el("span", { className: "novo", textContent: "🏆 Novo recorde!" }) : null);
+}
+
+function quadro(t) {
+  if (jogo.estado === "jogando") {
+    acumulado = Math.min(acumulado + (t - ultimo), 400); // aba escondida não faz a minhoca "pular" vários passos
+    while (acumulado >= intervalo() && jogo.estado === "jogando") {
+      acumulado -= intervalo();
+      const r = passo(t);
+      if (typeof r === "number") {
+        const [x, y] = [jogo.cobra[0].x * celula + celula / 2, jogo.cobra[0].y * celula];
+        flutuantes.push({ txt: "+" + r, x, y, t });
+        navigator.vibrate?.(12);
+        placar();
+      }
+      if (jogo.estado === "fim") terminar(false);
+      if (jogo.estado === "venceu") terminar(true);
+    }
+  }
+  ultimo = t;
+  desenhar(t);
+  requestAnimationFrame(quadro);
+}
+
+/* ---------- Controles ---------- */
+function direcao(dx, dy) {
+  if (jogo.estado === "pronto" || jogo.estado === "fim" || jogo.estado === "venceu") { comecar(); }
+  else if (jogo.estado === "pausado") { comecar(); }
+  virar(dx, dy);
+}
+const TECLAS = { ArrowUp: [0, -1], KeyW: [0, -1], ArrowDown: [0, 1], KeyS: [0, 1], ArrowLeft: [-1, 0], KeyA: [-1, 0], ArrowRight: [1, 0], KeyD: [1, 0] };
+document.addEventListener("keydown", e => {
+  if (TECLAS[e.code]) { e.preventDefault(); direcao(...TECLAS[e.code]); return; }
+  if (e.code === "Space" || e.code === "KeyP") {
+    e.preventDefault();
+    jogo.estado === "jogando" ? pausar() : comecar();
+  }
+  if (e.code === "Enter" && !sobreposicao.hidden) comecar();
+});
+document.querySelectorAll(".seta[data-d]").forEach(b => b.addEventListener("pointerdown", e => {
+  e.preventDefault();
+  direcao(...b.dataset.d.split(",").map(Number));
+}));
+$("btn-pausa").addEventListener("click", () => (jogo.estado === "jogando" ? pausar() : comecar()));
+$("btn-jogar").addEventListener("click", comecar);
+
+let toque = null;
+const tabuleiro = $("tabuleiro");
+tabuleiro.addEventListener("pointerdown", e => { toque = { x: e.clientX, y: e.clientY }; });
+tabuleiro.addEventListener("pointermove", e => {
+  if (!toque || jogo.estado !== "jogando") return;
+  const dx = e.clientX - toque.x, dy = e.clientY - toque.y;
+  if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) return;
+  Math.abs(dx) > Math.abs(dy) ? virar(Math.sign(dx), 0) : virar(0, Math.sign(dy));
+  toque = { x: e.clientX, y: e.clientY }; // permite várias curvas no mesmo arrasto
+});
+addEventListener("pointerup", () => { toque = null; });
+document.addEventListener("visibilitychange", () => { if (document.hidden) pausar(); });
+
+$("legenda").append(...FRUTAS.slice(0, 1).map(f => el("span", {}, icone(f.e, 18), "1 ponto")),
+  el("span", {}, icone(ESPECIAL.e, 18), "5 pontos, mas some rápido!"));
+
+novoJogo();
+placar();
+requestAnimationFrame(quadro);
+</script>
+</body>
+</html>
